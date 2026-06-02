@@ -381,7 +381,12 @@
     <string name="track_delete_multiple_dialog_body">{0, plural, one {# track} other {# tracks}} will be permanently deleted from your device</string>
     <string name="toast_track_deleted">{0, plural, one {# track} other {# tracks}} deleted</string>
     <string name="toast_track_delete_failed">Failed to delete {0, plural, one {# track} other {# tracks}}</string>
-    <string name="track_view_album">View album “{0}”</string>
+    <string name="folder_delete">Delete folder</string>
+    <string name="folder_delete_dialog_title">Delete folder?</string>
+    <string name="folder_delete_dialog_body">Folder "{0}" and all its contents will be permanently deleted from your device</string>
+    <string name="toast_folder_deleted">Folder "{0}" deleted</string>
+    <string name="toast_folder_delete_failed">Failed to delete folder "{0}"</string>
+    <string name="track_view_album">View album "{0}"</string>
     <string name="track_view_artist">View artist “{0}”</string>
     <string name="track_edit_tags">Edit tags</string>
     <string name="track_edit_tags_title">Edit tags</string>

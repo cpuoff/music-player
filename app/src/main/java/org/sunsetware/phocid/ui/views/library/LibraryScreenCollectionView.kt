@@ -234,6 +234,11 @@ sealed class LibraryScreenCollectionViewItemInfo :
                 collectionDeleteMenuItem(
                     { childTracksRecursive() },
                     viewModel.uiManager,
+                ),
+                folderDeleteMenuItem(
+                    folder.path,
+                    folder.fileName,
+                    viewModel.uiManager,
                 )
             )
         }
@@ -252,7 +257,18 @@ sealed class LibraryScreenCollectionViewItemInfo :
                 { multiSelectTracks + others.flatMap { it.multiSelectTracks } },
                 viewModel.uiManager,
                 continuation,
-            )
+            ) + others.mapNotNull { other ->
+                if (other is LibraryFolder) {
+                    folderDeleteMenuItem(
+                        other.folder.path,
+                        other.folder.fileName,
+                        viewModel.uiManager,
+                        continuation,
+                    )
+                } else {
+                    null
+                }
+            }
         }
     }
 

@@ -188,6 +188,19 @@ inline fun collectionDeleteMenuItem(
 }
 
 @Stable
+inline fun folderDeleteMenuItem(
+    folderPath: String,
+    folderName: String,
+    uiManager: UiManager,
+    crossinline continuation: () -> Unit = {},
+): MenuItem.Button {
+    return MenuItem.Button(Strings[R.string.folder_delete], Icons.Filled.Delete, dangerous = true) {
+        uiManager.openDialog(DeleteFolderDialog(folderPath, folderName))
+        continuation()
+    }
+}
+
+@Stable
 fun playlistCollectionMenuItemsWithoutEdit(key: UUID, uiManager: UiManager): List<MenuItem.Button> {
     return listOfNotNull(
         if (!SpecialPlaylistLookup.containsKey(key)) {

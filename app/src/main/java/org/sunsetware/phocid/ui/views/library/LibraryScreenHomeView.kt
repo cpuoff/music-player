@@ -274,12 +274,23 @@ class LibraryScreenHomeViewState(
                 artwork = Artwork.Track(album.tracks.firstOrNull() ?: InvalidTrack),
                 tracks = { album.tracks },
                 menuItems = {
-                    collectionMenuItems({ album.tracks }, it.playerManager, it.uiManager)
+                    collectionMenuItems({ album.tracks }, it.playerManager, it.uiManager) +
+                    listOf(
+                        collectionDeleteMenuItem(
+                            { album.tracks },
+                            it.uiManager,
+                        )
+                    )
                 },
                 multiSelectMenuItems = { others, viewModel, continuation ->
                     collectionMenuItems(
                         { album.tracks + others.flatMap { it.tracks() } },
                         viewModel.playerManager,
+                        viewModel.uiManager,
+                        continuation,
+                    ) +
+                    collectionDeleteMenuItem(
+                        { album.tracks + others.flatMap { it.tracks() } },
                         viewModel.uiManager,
                         continuation,
                     )
@@ -310,12 +321,23 @@ class LibraryScreenHomeViewState(
                 artwork = Artwork.Track(artist.tracks.firstOrNull() ?: InvalidTrack),
                 tracks = { artist.tracks },
                 menuItems = {
-                    collectionMenuItems({ artist.tracks }, it.playerManager, it.uiManager)
+                    collectionMenuItems({ artist.tracks }, it.playerManager, it.uiManager) +
+                    listOf(
+                        collectionDeleteMenuItem(
+                            { artist.tracks },
+                            it.uiManager,
+                        )
+                    )
                 },
                 multiSelectMenuItems = { others, viewModel, continuation ->
                     collectionMenuItems(
                         { artist.tracks + others.flatMap { it.tracks() } },
                         viewModel.playerManager,
+                        viewModel.uiManager,
+                        continuation,
+                    ) +
+                    collectionDeleteMenuItem(
+                        { artist.tracks + others.flatMap { it.tracks() } },
                         viewModel.uiManager,
                         continuation,
                     )
@@ -346,12 +368,23 @@ class LibraryScreenHomeViewState(
                 artwork = Artwork.Track(albumArtist.tracks.firstOrNull() ?: InvalidTrack),
                 tracks = { albumArtist.tracks },
                 menuItems = {
-                    collectionMenuItems({ albumArtist.tracks }, it.playerManager, it.uiManager)
+                    collectionMenuItems({ albumArtist.tracks }, it.playerManager, it.uiManager) +
+                    listOf(
+                        collectionDeleteMenuItem(
+                            { albumArtist.tracks },
+                            it.uiManager,
+                        )
+                    )
                 },
                 multiSelectMenuItems = { others, viewModel, continuation ->
                     collectionMenuItems(
                         { albumArtist.tracks + others.flatMap { it.tracks() } },
                         viewModel.playerManager,
+                        viewModel.uiManager,
+                        continuation,
+                    ) +
+                    collectionDeleteMenuItem(
+                        { albumArtist.tracks + others.flatMap { it.tracks() } },
                         viewModel.uiManager,
                         continuation,
                     )
@@ -382,12 +415,23 @@ class LibraryScreenHomeViewState(
                 artwork = Artwork.Track(genre.tracks.firstOrNull() ?: InvalidTrack),
                 tracks = { genre.tracks },
                 menuItems = {
-                    collectionMenuItems({ genre.tracks }, it.playerManager, it.uiManager)
+                    collectionMenuItems({ genre.tracks }, it.playerManager, it.uiManager) +
+                    listOf(
+                        collectionDeleteMenuItem(
+                            { genre.tracks },
+                            it.uiManager,
+                        )
+                    )
                 },
                 multiSelectMenuItems = { others, viewModel, continuation ->
                     collectionMenuItems(
                         { genre.tracks + others.flatMap { it.tracks() } },
                         viewModel.playerManager,
+                        viewModel.uiManager,
+                        continuation,
+                    ) +
+                    collectionDeleteMenuItem(
+                        { genre.tracks + others.flatMap { it.tracks() } },
                         viewModel.uiManager,
                         continuation,
                     )
@@ -442,6 +486,12 @@ class LibraryScreenHomeViewState(
                                 { folder.childTracksRecursive(libraryIndex.folders) },
                                 it.playerManager,
                                 it.uiManager,
+                            ) + listOf(
+                                folderDeleteMenuItem(
+                                    folder.path,
+                                    folder.fileName,
+                                    it.uiManager,
+                                )
                             )
                         },
                         multiSelectMenuItems = { others, viewModel, continuation ->
@@ -453,6 +503,13 @@ class LibraryScreenHomeViewState(
                                 viewModel.playerManager,
                                 viewModel.uiManager,
                                 continuation,
+                            ) + listOf(
+                                folderDeleteMenuItem(
+                                    folder.path,
+                                    folder.fileName,
+                                    viewModel.uiManager,
+                                    continuation,
+                                )
                             )
                         },
                     ) { viewModel, _ ->
