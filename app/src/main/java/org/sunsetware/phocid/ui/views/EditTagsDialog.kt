@@ -10,16 +10,24 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -31,11 +39,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -43,6 +55,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.io.FilenameUtils
 import org.jaudiotagger.audio.AudioFileIO
 import org.jaudiotagger.tag.FieldKey
+import org.jaudiotagger.tag.images.Artwork as JTagArtwork
 import org.sunsetware.phocid.Dialog
 import org.sunsetware.phocid.MainViewModel
 import org.sunsetware.phocid.R
@@ -90,6 +103,8 @@ class EditTagsDialog(private val track: Track) : Dialog() {
         var discNumber by rememberSaveable { mutableStateOf(track.discNumber?.toString() ?: "") }
         var comment by rememberSaveable { mutableStateOf(track.comment ?: "") }
         var lyrics by rememberSaveable { mutableStateOf(track.unsyncedLyrics ?: "") }
+        
+        var coverArtUri by rememberSaveable { mutableStateOf<String?>(null) }
 
         var isSaving by remember { mutableStateOf(false) }
 
@@ -129,6 +144,7 @@ class EditTagsDialog(private val track: Track) : Dialog() {
                 coroutineScope.launch {
                     val saveResult = withContext(Dispatchers.IO) {
                         saveTagsToFile(
+                            context,
                             track.path,
                             title,
                             artist,
@@ -139,7 +155,8 @@ class EditTagsDialog(private val track: Track) : Dialog() {
                             trackNumber,
                             discNumber,
                             comment,
-                            lyrics
+                            lyrics,
+                            coverArtUri
                         )
                     }
                     
@@ -157,6 +174,14 @@ class EditTagsDialog(private val track: Track) : Dialog() {
                 uiManager.toast(
                     Strings[R.string.toast_track_tags_save_failed].icuFormat("Permission denied")
                 )
+            }
+        }
+
+        val imagePickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.GetContent()
+        ) { uri ->
+            if (uri != null) {
+                coverArtUri = uri.toString()
             }
         }
 
@@ -178,6 +203,7 @@ class EditTagsDialog(private val track: Track) : Dialog() {
                     // For older Android versions, try direct write
                     val saveResult = withContext(Dispatchers.IO) {
                         saveTagsToFile(
+                            context,
                             track.path,
                             title,
                             artist,
@@ -188,7 +214,8 @@ class EditTagsDialog(private val track: Track) : Dialog() {
                             trackNumber,
                             discNumber,
                             comment,
-                            lyrics
+                            lyrics,
+                            coverArtUri
                         )
                     }
                     
@@ -224,6 +251,43 @@ class EditTagsDialog(private val track: Track) : Dialog() {
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
+
+                // Cover art picker
+                Text(
+                    Strings[R.string.track_edit_tags_cover_art],
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable(enabled = isSupportedFormat) {
+                            imagePickerLauncher.launch("image/*")
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (coverArtUri != null) {
+                        AsyncImage(
+                            model = coverArtUri,
+                            contentDescription = "Cover art",
+                            modifier = Modifier.fillMaxWidth(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Filled.Add,
+                            contentDescription = "Add cover art",
+                            modifier = Modifier.aspectRatio(1f),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = title,
@@ -335,6 +399,7 @@ class EditTagsDialog(private val track: Track) : Dialog() {
 }
 
 private fun saveTagsToFile(
+    context: android.content.Context,
     path: String,
     title: String,
     artist: String,
@@ -345,7 +410,8 @@ private fun saveTagsToFile(
     trackNumber: String,
     discNumber: String,
     comment: String,
-    lyrics: String
+    lyrics: String,
+    coverArtUri: String? = null
 ): EditTagsSaveResult {
     return try {
         val file = File(path)
@@ -399,6 +465,36 @@ private fun saveTagsToFile(
         setOrDeleteNumericField(FieldKey.DISC_NO, discNumber)
         setOrDeleteField(FieldKey.COMMENT, comment)
         setOrDeleteField(FieldKey.LYRICS, lyrics)
+
+        // Handle cover art if provided
+        if (coverArtUri != null) {
+            try {
+                val uri = android.net.Uri.parse(coverArtUri)
+                val inputStream = context.contentResolver.openInputStream(uri)
+                if (inputStream != null) {
+                    val imageBytes = inputStream.readBytes()
+                    inputStream.close()
+                    
+                    // Clear existing artwork
+                    try {
+                        tag.deleteArtworkField()
+                    } catch (e: Exception) {
+                        Log.d("EditTagsDialog", "Could not clear artwork: ${e.message}")
+                    }
+                    
+                    // Add new artwork
+                    val artwork = JTagArtwork()
+                    artwork.binaryData = imageBytes
+                    artwork.mimeType = "image/jpeg"
+                    artwork.pictureType = 3 // 3 = Cover front
+                    tag.addField(artwork)
+                    Log.d("EditTagsDialog", "Artwork added successfully")
+                }
+            } catch (e: Exception) {
+                Log.d("EditTagsDialog", "Error handling cover art: ${e.message}")
+                // Continue with tag saving even if artwork fails
+            }
+        }
 
         audioFile.commit()
         EditTagsSaveResult.Success
