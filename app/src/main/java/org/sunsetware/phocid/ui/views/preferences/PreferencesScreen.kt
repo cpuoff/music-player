@@ -1058,6 +1058,11 @@ private val About =
                 icon = Icons.Filled.Attribution,
                 onClick = { uiManager.openDialog(PreferencesThirdPartyLicensesDialog()) },
             ),
+            Item.NonInteractive(
+                title = { Strings[R.string.preferences_modified_version] },
+                subtitle = { null },
+                icon = null,
+            ),
         ),
     )
 
