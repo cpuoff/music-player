@@ -84,6 +84,7 @@ import org.sunsetware.phocid.ui.components.Scrollbar
 import org.sunsetware.phocid.ui.components.multiSelectClickable
 import org.sunsetware.phocid.ui.theme.hashColor
 import org.sunsetware.phocid.ui.views.MenuItem
+import org.sunsetware.phocid.ui.views.collectionDeleteMenuItem
 import org.sunsetware.phocid.ui.views.collectionMenuItems
 import org.sunsetware.phocid.ui.views.playlistCollectionMenuItems
 import org.sunsetware.phocid.ui.views.playlistTrackMenuItems
@@ -229,6 +230,11 @@ sealed class LibraryScreenCollectionViewItemInfo :
                 { childTracksRecursive() },
                 viewModel.playerManager,
                 viewModel.uiManager,
+            ) + listOf(
+                collectionDeleteMenuItem(
+                    { childTracksRecursive() },
+                    viewModel.uiManager,
+                )
             )
         }
 
@@ -240,6 +246,10 @@ sealed class LibraryScreenCollectionViewItemInfo :
             return collectionMenuItems(
                 { multiSelectTracks + others.flatMap { it.multiSelectTracks } },
                 viewModel.playerManager,
+                viewModel.uiManager,
+                continuation,
+            ) + collectionDeleteMenuItem(
+                { multiSelectTracks + others.flatMap { it.multiSelectTracks } },
                 viewModel.uiManager,
                 continuation,
             )
